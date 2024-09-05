@@ -129,69 +129,52 @@
     </div>
 
     <footer>
-        <p>&copy; 2024 Central Placement Cell | Sinhgad Institutes | Proudly made by mayurmundankar.com </p>
+        <p>&copy; 2024 Central Placement Cell | Sinhgad Institutes | Proudly made by mayurmundankar.com</p>
     </footer>
 
     <script>
-        const sheetId = '2PACX-1vRU01uMEsnrOicNZNo2rYi2u39WnOtMZLT2PXnfo1K5P5ydde33nDDhkGnppDoOBr3nZIVEJBNlZsH1';
-        const sheetUrl = `https://docs.google.com/feeds/list/${sheetId}/od6/public/values?alt=json`;
-    
-        function fetchTimetable() {
-            fetch(sheetUrl)
-                .then(response => response.json())
-                .then(data => {
-                    console.log('Data fetched:', data);  // Log the entire response
-                    const entries = data.feed.entry;
-    
-                    const pptBody = document.getElementById('ppt-body');
-                    const assessmentBody = document.getElementById('assessment-body');
-                    pptBody.innerHTML = '';
-                    assessmentBody.innerHTML = '';
-    
-                    entries.forEach(entry => {
-                        // Preplacement Talk (PPT)
-                        const pptDate = entry.gsx$pptdate ? entry.gsx$pptdate.$t : '';
-                        const pptCompany = entry.gsx$pptcompany ? entry.gsx$pptcompany.$t : '';
-                        const pptTime = entry.gsx$ppttime ? entry.gsx$ppttime.$t : '';
-                        const pptVenue = entry.gsx$pptvenue ? entry.gsx$pptvenue.$t : '';
-    
-                        const pptRow = `<tr>
-                            <td>${pptDate}</td>
-                            <td>${pptCompany}</td>
-                            <td>${pptTime}</td>
-                            <td>${pptVenue}</td>
-                        </tr>`;
-                        pptBody.innerHTML += pptRow;
-    
-                        // Assessment Details
-                        const assessCompany = entry.gsx$assesscompany ? entry.gsx$assesscompany.$t : '';
-                        const assessDay = entry.gsx$assessday ? entry.gsx$assessday.$t : '';
-                        const assessTimeSlot = entry.gsx$assesstimeslot ? entry.gsx$assesstimeslot.$t : '';
-                        const assessMode = entry.gsx$assessmode ? entry.gsx$assessmode.$t : '';
-    
-                        const assessRow = `<tr>
-                            <td>${assessCompany}</td>
-                            <td>${assessDay}</td>
-                            <td>${assessTimeSlot}</td>
-                            <td>${assessMode}</td>
-                        </tr>`;
-                        assessmentBody.innerHTML += assessRow;
-                    });
-    
-                    document.querySelectorAll('.loading').forEach(el => el.style.display = 'none');
-                    document.getElementById('ppt-table').style.display = 'table';
-                    document.getElementById('assessment-table').style.display = 'table';
-                })
-                .catch(error => {
-                    console.error('Error fetching data:', error);
-                    document.querySelectorAll('.loading').forEach(el => el.textContent = 'Failed to load details.');
-                });
+        async function fetchTimetable() {
+            const apiKey = 'AIzaSyCpmjtWmtopPzjWfOCIpH83G63U3a35vhY';  // Replace with your Google Sheets API key
+            const sheetId = '2PACX-1vRU01uMEsnrOicNZNo2rYi2u39WnOtMZLT2PXnfo1K5P5ydde33nDDhkGnppDoOBr3nZIVEJBNlZsH1';  // Replace with your Google Sheet ID
+            const pptRange = 'PPT!A2:D2';  // Replace with the range for Preplacement Talk
+            const assessmentRange = 'Assessment!F2:I2';  // Replace with the range for Assessment Details
+
+            try {
+                // Fetch Preplacement Talk details
+                const pptResponse = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${pptRange}?key=${apiKey}`);
+                const pptData = await pptResponse.json();
+                populateTable(pptData.values, 'ppt-body', 'ppt-table');
+
+                // Fetch Assessment Details
+                const assessResponse = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${assessmentRange}?key=${apiKey}`);
+                const assessData = await assessResponse.json();
+                populateTable(assessData.values, 'assessment-body', 'assessment-table');
+                
+            } catch (error) {
+                console.error('Error fetching data:', error);
+                document.querySelectorAll('.loading').forEach(el => el.textContent = 'Failed to load details.');
+            }
         }
-    
+
+        // Populate the table with the fetched data
+        function populateTable(data, tableBodyId, tableId) {
+            const tableBody = document.getElementById(tableBodyId);
+            tableBody.innerHTML = '';
+
+            data.forEach(row => {
+                const tableRow = `<tr>
+                    ${row.map(cell => `<td>${cell}</td>`).join('')}
+                </tr>`;
+                tableBody.innerHTML += tableRow;
+            });
+
+            document.querySelector(`.${tableId} .loading`).style.display = 'none';
+            document.getElementById(tableId).style.display = 'table';
+        }
+
         // Fetch data on page load
         fetchTimetable();
     </script>
-    
 
 </body>
 </html>
