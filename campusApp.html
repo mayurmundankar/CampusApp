@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Placement Timetable</title>
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #F4F7FA;
+            color: #333;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: #fff;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+        }
+
+        h1 {
+            font-size: 2rem;
+            font-weight: 600;
+            text-align: center;
+            margin-bottom: 20px;
+            color: #2C3E50;
+        }
+
+        h2 {
+            font-size: 1.5rem;
+            margin-top: 40px;
+            color: #3498DB;
+            text-align: center;
+        }
+
+        .timetable {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .timetable th, .timetable td {
+            padding: 12px;
+            text-align: center;
+        }
+
+        .timetable th {
+            background-color: #3498DB;
+            color: #fff;
+            font-weight: 500;
+        }
+
+        .timetable tr:nth-child(odd) {
+            background-color: #F2F2F2;
+        }
+
+        .timetable tr:nth-child(even) {
+            background-color: #ECF0F1;
+        }
+
+        .timetable td {
+            color: #2C3E50;
+        }
+
+        .loading {
+            text-align: center;
+            font-size: 1.2rem;
+            color: #7F8C8D;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 30px;
+            font-size: 0.9rem;
+            color: #7F8C8D;
+        }
+
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>On-Campus Placement Timetable</h1>
+
+        <h2>Company Preplacement Talk (PPT)</h2>
+        <div class="loading">Loading preplacement talk details...</div>
+        <table class="timetable" id="ppt-table" style="display:none;">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Company</th>
+                    <th>Time</th>
+                    <th>Venue</th>
+                </tr>
+            </thead>
+            <tbody id="ppt-body">
+                <!-- Dynamic Content Will Be Inserted Here -->
+            </tbody>
+        </table>
+
+        <h2>Company Assessment Details</h2>
+        <div class="loading">Loading assessment details...</div>
+        <table class="timetable" id="assessment-table" style="display:none;">
+            <thead>
+                <tr>
+                    <th>Company</th>
+                    <th>Date</th>
+                    <th>Time Slot</th>
+                    <th>Mode (Online/On-campus)</th>
+                </tr>
+            </thead>
+            <tbody id="assessment-body">
+                <!-- Dynamic Content Will Be Inserted Here -->
+            </tbody>
+        </table>
+    </div>
+
+    <footer>
+        <p>&copy; 2024 Central Placement Cell | Sinhgad Institutes | Proudly made by mayurmundankar.com </p>
+    </footer>
+
+    <script>
+        const sheetId = '2PACX-1vRU01uMEsnrOicNZNo2rYi2u39WnOtMZLT2PXnfo1K5P5ydde33nDDhkGnppDoOBr3nZIVEJBNlZsH1';
+        const sheetUrl = `https://spreadsheets.google.com/feeds/list/${sheetId}/od6/public/values?alt=json`;
+    
+        function fetchTimetable() {
+            fetch(sheetUrl)
+                .then(response => {
+                    console.log('Response status:', response.status);
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Data fetched:', data);  // Log the entire response
+                    const entries = data.feed.entry;
+                    console.log('Entries:', entries);  // Log each entry
+    
+                    const pptBody = document.getElementById('ppt-body');
+                    const assessmentBody = document.getElementById('assessment-body');
+                    pptBody.innerHTML = '';
+                    assessmentBody.innerHTML = '';
+    
+                    entries.forEach(entry => {
+                        // Preplacement Talk (PPT)
+                        const pptDate = entry.gsx$pptdate ? entry.gsx$pptdate.$t : '';
+                        const pptCompany = entry.gsx$pptcompany ? entry.gsx$pptcompany.$t : '';
+                        const pptTime = entry.gsx$ppttime ? entry.gsx$ppttime.$t : '';
+                        const pptVenue = entry.gsx$pptvenue ? entry.gsx$pptvenue.$t : '';
+    
+                        const pptRow = `<tr>
+                            <td>${pptDate}</td>
+                            <td>${pptCompany}</td>
+                            <td>${pptTime}</td>
+                            <td>${pptVenue}</td>
+                        </tr>`;
+                        pptBody.innerHTML += pptRow;
+    
+                        // Assessment Details
+                        const assessCompany = entry.gsx$assesscompany ? entry.gsx$assesscompany.$t : '';
+                        const assessDay = entry.gsx$assessday ? entry.gsx$assessday.$t : '';
+                        const assessTimeSlot = entry.gsx$assesstimeslot ? entry.gsx$assesstimeslot.$t : '';
+                        const assessMode = entry.gsx$assessmode ? entry.gsx$assessmode.$t : '';
+    
+                        const assessRow = `<tr>
+                            <td>${assessCompany}</td>
+                            <td>${assessDay}</td>
+                            <td>${assessTimeSlot}</td>
+                            <td>${assessMode}</td>
+                        </tr>`;
+                        assessmentBody.innerHTML += assessRow;
+                    });
+    
+                    document.querySelectorAll('.loading').forEach(el => el.style.display = 'none');
+                    document.getElementById('ppt-table').style.display = 'table';
+                    document.getElementById('assessment-table').style.display = 'table';
+                })
+                .catch(error => {
+                    console.error('Error fetching data:', error);
+                    document.querySelectorAll('.loading').forEach(el => el.textContent = 'Failed to load details.');
+                });
+        }
+    
+        // Fetch data on page load
+        fetchTimetable();
+    </script>
+    
+
+</body>
+</html>
