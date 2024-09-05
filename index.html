@@ -134,27 +134,44 @@
 
     <script>
         async function fetchTimetable() {
-            const apiKey = 'AIzaSyCpmjtWmtopPzjWfOCIpH83G63U3a35vhY';  // Replace with your Google Sheets API key
-            const sheetId = '1nZteb6KidU4RGE7HCpk7Gitrfs0VfpalVpiRhuLOvok';  // Replace with your Google Sheet ID
-            const pptRange = 'PPT!A2:D';  // Replace with the range for Preplacement Talk
-            const assessmentRange = 'Assessment!F2:I';  // Replace with the range for Assessment Details
+    const apiKey = 'AIzaSyCpmjtWmtopPzjWfOCIpH83G63U3a35vhY';  // Replace with your Google Sheets API key
+    const sheetId = '1nZteb6KidU4RGE7HCpk7Gitrfs0VfpalVpiRhuLOvok';  // Replace with your Google Sheet ID
+    const pptRange = 'PPT!A2:D';  // Dynamically fetch all rows in PPT (from A2 to D)
+    const assessmentRange = 'Assessment!F2:I';  // Dynamically fetch all rows in Assessment (from F2 to I)
 
-            try {
-                // Fetch Preplacement Talk details
-                const pptResponse = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${pptRange}?key=${apiKey}`);
-                const pptData = await pptResponse.json();
-                populateTable(pptData.values, 'ppt-body', 'ppt-table');
-
-                // Fetch Assessment Details
-                const assessResponse = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${assessmentRange}?key=${apiKey}`);
-                const assessData = await assessResponse.json();
-                populateTable(assessData.values, 'assessment-body', 'assessment-table');
-                
-            } catch (error) {
-                console.error('Error fetching data:', error);
-                document.querySelectorAll('.loading').forEach(el => el.textContent = 'Failed to load details.');
-            }
+    try {
+        // Fetch Preplacement Talk details
+        const pptResponse = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${pptRange}?key=${apiKey}`);
+        const pptData = await pptResponse.json();
+        
+        // Check if pptData contains values
+        if (pptData.values && pptData.values.length > 0) {
+            console.log('PPT Data:', pptData);  // Debug log for ppt data
+            populateTable(pptData.values, 'ppt-body', 'ppt-table');
+        } else {
+            console.error('No PPT data found');
+            document.getElementById('ppt-table').innerHTML = 'No PPT Data Available';
         }
+
+        // Fetch Assessment Details
+        const assessResponse = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${assessmentRange}?key=${apiKey}`);
+        const assessData = await assessResponse.json();
+        
+        // Check if assessData contains values
+        if (assessData.values && assessData.values.length > 0) {
+            console.log('Assessment Data:', assessData);  // Debug log for assessment data
+            populateTable(assessData.values, 'assessment-body', 'assessment-table');
+        } else {
+            console.error('No Assessment data found');
+            document.getElementById('assessment-table').innerHTML = 'No Assessment Data Available';
+        }
+
+    } catch (error) {
+        console.error('Error fetching data:', error);
+        document.querySelectorAll('.loading').forEach(el => el.textContent = 'Failed to load details.');
+    }
+}
+
 
         // Populate the table with the fetched data
         function populateTable(data, tableBodyId, tableId) {
