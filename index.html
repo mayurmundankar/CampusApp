@@ -3,101 +3,69 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Placement Timetable</title>
-
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
-
+    <title>On-Campus Placement Timetable</title>
     <style>
         body {
-            font-family: 'Poppins', sans-serif;
-            background-color: #F4F7FA;
-            color: #333;
+            font-family: Arial, sans-serif;
+            margin: 0;
             padding: 20px;
-        }
-
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            background-color: #fff;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            padding: 40px;
+            background-color: #f4f4f9;
         }
 
         h1 {
-            font-size: 2rem;
-            font-weight: 600;
             text-align: center;
             margin-bottom: 20px;
-            color: #2C3E50;
         }
 
-        h2 {
-            font-size: 1.5rem;
-            margin-top: 40px;
-            color: #3498DB;
-            text-align: center;
+        .table-wrapper {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         }
 
-        .timetable {
+        table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 20px;
+            display: none;
         }
 
-        .timetable th, .timetable td {
-            padding: 12px;
+        table, th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+        }
+
+        th {
+            background-color: #f2f2f2;
+            text-align: left;
+        }
+
+        td {
             text-align: center;
-        }
-
-        .timetable th {
-            background-color: #3498DB;
-            color: #fff;
-            font-weight: 500;
-        }
-
-        .timetable tr:nth-child(odd) {
-            background-color: #F2F2F2;
-        }
-
-        .timetable tr:nth-child(even) {
-            background-color: #ECF0F1;
-        }
-
-        .timetable td {
-            color: #2C3E50;
         }
 
         .loading {
             text-align: center;
-            font-size: 1.2rem;
-            color: #7F8C8D;
+            padding: 20px;
+            font-size: 16px;
+            color: #555;
         }
 
-        footer {
+        .error-message {
+            color: red;
             text-align: center;
-            margin-top: 30px;
-            font-size: 0.9rem;
-            color: #7F8C8D;
-        }
-
-        @media (max-width: 600px) {
-            h1 {
-                font-size: 1.5rem;
-            }
         }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <h1>On-Campus Placement Timetable</h1>
+    <h1>On-Campus Placement Timetable</h1>
 
-        <h2>Company Preplacement Talk (PPT)</h2>
-        <div class="loading">Loading preplacement talk details...</div>
-        <table class="timetable" id="ppt-table" style="display:none;">
+    <div class="table-wrapper">
+        <div class="loading">Loading...</div>
+        <table id="pptTable">
             <thead>
                 <tr>
                     <th>Date</th>
@@ -106,72 +74,67 @@
                     <th>Venue</th>
                 </tr>
             </thead>
-            <tbody id="ppt-body">
-                <!-- Dynamic Content Will Be Inserted Here -->
-            </tbody>
-        </table>
-
-        <h2>Company Assessment Details</h2>
-        <div class="loading">Loading assessment details...</div>
-        <table class="timetable" id="assessment-table" style="display:none;">
-            <thead>
-                <tr>
-                    <th>Company</th>
-                    <th>Date</th>
-                    <th>Time Slot</th>
-                    <th>Mode (Online/On-campus)</th>
-                </tr>
-            </thead>
-            <tbody id="assessment-body">
-                <!-- Dynamic Content Will Be Inserted Here -->
-            </tbody>
+            <tbody id="pptTableBody"></tbody>
         </table>
     </div>
 
-    <footer>
-        <p>&copy; 2024 Central Placement Cell | Sinhgad Institutes | Proudly made by mayurmundankar.com</p>
-    </footer>
+    <br>
+
+    <div class="table-wrapper">
+        <div class="loading">Loading...</div>
+        <table id="assessmentTable">
+            <thead>
+                <tr>
+                    <th>Company</th>
+                    <th>Assessment Date</th>
+                    <th>Time Slot</th>
+                    <th>Mode</th>
+                </tr>
+            </thead>
+            <tbody id="assessmentTableBody"></tbody>
+        </table>
+    </div>
+
+    <div class="error-message" id="errorMessage"></div>
 
     <script>
-        async function fetchTimetable() {
-    const apiKey = 'AIzaSyCpmjtWmtopPzjWfOCIpH83G63U3a35vhY';  // Replace with your Google Sheets API key
-    const sheetId = '1nZteb6KidU4RGE7HCpk7Gitrfs0VfpalVpiRhuLOvok';  // Replace with your Google Sheet ID
-    const pptRange = 'PPT!A2:D';  // Dynamically fetch all rows in PPT (from A2 to D)
-    const assessmentRange = 'Assessment!F2:I';  // Dynamically fetch all rows in Assessment (from F2 to I)
+        const API_KEY = 'AIzaSyCpmjtWmtopPzjWfOCIpH83G63U3a35vhY';
+        const SPREADSHEET_ID = '1nZteb6KidU4RGE7HCpk7Gitrfs0VfpalVpiRhuLOvok';
 
-    try {
-        // Fetch Preplacement Talk details
-        const pptResponse = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${pptRange}?key=${apiKey}`);
-        const pptData = await pptResponse.json();
-        
-        // Check if pptData contains values
-        if (pptData.values && pptData.values.length > 0) {
-            console.log('PPT Data:', pptData);  // Debug log for ppt data
-            populateTable(pptData.values, 'ppt-body', 'ppt-table');
-        } else {
-            console.error('No PPT data found');
-            document.getElementById('ppt-table').innerHTML = 'No PPT Data Available';
+        const pptRange = 'PPT!A2:D1000';
+        const assessmentRange = 'Assessment!F2:I1000';
+
+        function fetchTimetable() {
+            // Fetch PPT data
+            fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${pptRange}?key=${API_KEY}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.values && data.values.length > 0) {
+                        populateTable(data.values, 'pptTableBody', 'pptTable');
+                    } else {
+                        document.getElementById('errorMessage').textContent = 'No PPT data found';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching PPT data:', error);
+                    document.getElementById('errorMessage').textContent = 'Error fetching PPT data';
+                });
+
+            // Fetch Assessment data
+            fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${assessmentRange}?key=${API_KEY}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.values && data.values.length > 0) {
+                        populateTable(data.values, 'assessmentTableBody', 'assessmentTable');
+                    } else {
+                        document.getElementById('errorMessage').textContent = 'No Assessment data found';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching Assessment data:', error);
+                    document.getElementById('errorMessage').textContent = 'Error fetching Assessment data';
+                });
         }
-
-        // Fetch Assessment Details
-        const assessResponse = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${assessmentRange}?key=${apiKey}`);
-        const assessData = await assessResponse.json();
-        
-        // Check if assessData contains values
-        if (assessData.values && assessData.values.length > 0) {
-            console.log('Assessment Data:', assessData);  // Debug log for assessment data
-            populateTable(assessData.values, 'assessment-body', 'assessment-table');
-        } else {
-            console.error('No Assessment data found');
-            document.getElementById('assessment-table').innerHTML = 'No Assessment Data Available';
-        }
-
-    } catch (error) {
-        console.error('Error fetching data:', error);
-        document.querySelectorAll('.loading').forEach(el => el.textContent = 'Failed to load details.');
-    }
-}
-
 
         // Populate the table with the fetched data
         function populateTable(data, tableBodyId, tableId) {
@@ -185,7 +148,13 @@
                 tableBody.innerHTML += tableRow;
             });
 
-            document.querySelector(`.${tableId} .loading`).style.display = 'none';
+            // Hide the loading spinner/message
+            const loadingElement = document.querySelector(`.${tableId} .loading`);
+            if (loadingElement) {
+                loadingElement.style.display = 'none';
+            }
+
+            // Show the table
             document.getElementById(tableId).style.display = 'table';
         }
 
