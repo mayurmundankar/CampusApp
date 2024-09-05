@@ -134,18 +134,14 @@
 
     <script>
         const sheetId = '2PACX-1vRU01uMEsnrOicNZNo2rYi2u39WnOtMZLT2PXnfo1K5P5ydde33nDDhkGnppDoOBr3nZIVEJBNlZsH1';
-        const sheetUrl = `https://docs.google.com/spreadsheets/d/e/2PACX-1vRU01uMEsnrOicNZNo2rYi2u39WnOtMZLT2PXnfo1K5P5ydde33nDDhkGnppDoOBr3nZIVEJBNlZsH1/pubhtml?gid=0&single=true`;
+        const sheetUrl = `https://spreadsheets.google.com/feeds/list/${sheetId}/od6/public/values?alt=json`;
     
         function fetchTimetable() {
             fetch(sheetUrl)
-                .then(response => {
-                    console.log('Response status:', response.status);
-                    return response.json();
-                })
+                .then(response => response.json())
                 .then(data => {
                     console.log('Data fetched:', data);  // Log the entire response
                     const entries = data.feed.entry;
-                    console.log('Entries:', entries);  // Log each entry
     
                     const pptBody = document.getElementById('ppt-body');
                     const assessmentBody = document.getElementById('assessment-body');
